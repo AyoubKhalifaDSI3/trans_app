@@ -1,0 +1,2 @@
+C:/src/trans_app/android/app/.cxx/Debug/3l3p3r5b/x86/CMakeFiles/edit_cache.dir
+C:/src/trans_app/android/app/.cxx/Debug/3l3p3r5b/x86/CMakeFiles/rebuild_cache.dir

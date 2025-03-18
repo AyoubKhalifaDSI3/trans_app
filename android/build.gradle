@@ -1,0 +1,34 @@
+buildscript {
+    ext.kotlin_version = "2.1.10"
+ // Vérifie la version de Kotlin adaptée à ton projet 2110
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+       classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+       /* classpath 'com.android.tools.build:gradle:8.2.1' // Assure-toi que cette version est compatible avec ton SDK*/
+        classpath 'com.google.gms:google-services:4.4.2' // 443Même version que celle utilisée dans les plugins 7.3.0
+        classpath 'com.android.tools.build:gradle:7.3.0'
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.buildDir = "../build"
+
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+    project.evaluationDependsOn(":app")
+}
+
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}
+
+

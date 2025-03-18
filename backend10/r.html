@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .search-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        #searchInput {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            width: 100%;
+        }
+        #results {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+            display: none;
+        }
+        .result-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+            display: none;
+        }
+        .no-results {
+            text-align: center;
+            color: #666;
+        }
+        .error {
+            color: red;
+            font-size: 14px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Rechercher un lieu..." autocomplete="off">
+        <div id="errorMessage" class="error"></div>
+        <div id="loading" class="loading">Chargement...</div>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const searchInput = document.getElementById('searchInput');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        const errorMessage = document.getElementById('errorMessage');
+
+        // Handle search input with debounce
+        let debounceTimeout;
+        searchInput.addEventListener('input', () => {
+            clearTimeout(debounceTimeout);
+            debounceTimeout = setTimeout(() => {
+                searchLocations(searchInput.value);
+            }, 300); // Debounce delay of 300ms
+        });
+
+        // Fetch locations from the server API
+        async function searchLocations(query) {
+            if (!query.trim()) {
+                results.style.display = 'none';
+                results.innerHTML = '';
+                errorMessage.style.display = 'none';
+                return;
+            }
+
+            loading.style.display = 'block';
+            results.style.display = 'none';
+            results.innerHTML = '';
+            errorMessage.style.display = 'none';
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/cities/search?q=${encodeURIComponent(query)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP error! Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (data.success && data.data.length > 0) {
+                    let html = '';
+                    data.data.forEach(country => {
+                        country.cities.forEach(city => {
+                            const [cityName, code] = city.split(' - ');
+                            html += `<div class="result-item">
+                                <span>${cityName}</span><br>
+                                <small>${country.country} (${code})</small>
+                            </div>`;
+                        });
+                    });
+                    results.innerHTML = html;
+                    results.style.display = 'block';
+                } else {
+                    results.innerHTML = '<div class="no-results">Aucun lieu trouvé</div>';
+                    results.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Fetch Error:', error);
+                errorMessage.textContent = `Error: ${error.message}`;
+                errorMessage.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
